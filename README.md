@@ -8,15 +8,15 @@
 |---|---|
 | `src/` | Assigner, Worker, JobQueue, myrules(규칙 함수), Common, Single(통신 없는 기준 실행) |
 | `canvas/` | 우리 조 canvas0~2.txt |
-| `scripts/` | 빌드, Worker N개 실행, 로컬 검증 |
+| `scripts/` | Worker N개 실행, 로컬 검증 |
 
 `student_pack/`(배포 자료)과 `참고자료/`는 저장소에 없다. 각자 `HW4_student_pack.zip`을 `student_pack/`에 풀어서 쓴다.
 
 ## 빌드
 
 ```
-./scripts/build.sh          # Linux · Git Bash
-.\scripts\build.ps1         # Windows PowerShell
+javac -encoding UTF-8 -d build/classes src/*.java                            # Linux · Git Bash
+javac -encoding UTF-8 -d build\classes (Get-ChildItem src\*.java).FullName    # Windows PowerShell
 ```
 JDK 17 이상(개발은 21). 결과는 `build/classes`.
 

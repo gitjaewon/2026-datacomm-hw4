@@ -7,7 +7,7 @@
 cd "$(dirname "$0")/.." || exit 1
 SAMPLE=$1; NS=${2:-"1 4 6 8"}; PORT=${3:-9100}
 CP=build/classes; OUT=build/test_local
-./scripts/build.sh > /dev/null || exit 1
+javac -encoding UTF-8 -d $CP src/*.java || exit 1
 rm -rf "$OUT"; mkdir -p "$OUT"
 
 # 샘플 정답 (주석·빈 줄 제외, 파일이름 hash8만)

@@ -21,12 +21,12 @@ HW#4 ASCII Evolution - Work Assigner가 중재하는 N-Worker 협업 진화
 
 실행 명령
   [원격 호스트] Assigner
-    ./scripts/build.sh            (또는 javac -encoding UTF-8 -d build/classes src/*.java)
+    javac -encoding UTF-8 -d build/classes src/*.java
     java -cp build/classes Assigner --port 9000 --team 4 --canvas ./canvas --out ./run1
     → INIT 로그에 N과 띠 경계가 찍힌다
 
   [로컬 PC] Worker N개
-    .\scripts\build.ps1
+    javac -encoding UTF-8 -d build\classes (Get-ChildItem src\*.java).FullName      (PowerShell)
     .\scripts\run_workers.ps1 -AssignerHost <공인IP> -N <INIT에 나온 N> -LogDir run1_workers
 
   기준값 (N = 1, 로컬)
@@ -49,7 +49,7 @@ src/JobQueue.java   Worker의 수신 → 계산 작업 큐 (Mutex + CV)
 src/myrules.java    규칙 함수 rule1~3_cell, repaint, to_brian, to_cyclic (키트 rule_test와 같은 이름)
 src/Common.java     canvas/round 파일 입출력(LF 고정), SHA-256 앞 8자리, 줄 단위 소켓 읽기, 로그 형식
 src/Single.java     통신 없는 단일 프로그램 3,000 Round (개발 중 자가 점검용)
-scripts/            build.sh / build.ps1 / run_workers.ps1 / run_workers.sh / test_local.sh
+scripts/            run_workers.ps1 / run_workers.sh (Worker N개 실행), test_local.sh (샘플 hash 확인)
 canvas/             canvas0.txt / canvas1.txt / canvas2.txt
 
 3-1. 실행 인자
