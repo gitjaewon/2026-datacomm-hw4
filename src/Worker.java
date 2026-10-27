@@ -1,5 +1,5 @@
 // Worker.java — 로컬 Worker (N개 프로세스로 실행)
-//   java -cp build Worker --host <Assigner IP> --port 8000 [--logdir <dir>]
+//   java -cp build Worker --host <Assigner IP> --port 9000 [--logdir <dir>]
 // Thread 구성: 수신 Thread (ROUND 읽기 → Job Queue) + 계산 Thread (Job 꺼내 계산 → RESULT 전송)
 // 메모리: 작업판 w·nx [h+2][160] (이중 버퍼), 덧칠용 c1·c2 [h+2][160]
 import java.io.*;

@@ -1,5 +1,5 @@
 // Assigner.java — Work Assigner (외부 서버에서 1개 실행)
-//   java -cp build Assigner --port 8000 --canvas <dir> --out <dir> [--n N] [--bind 0.0.0.0]   (조번호 기본 4, 샘플 G11은 --team 11)
+//   java -cp build Assigner --port 9000 --team 4 --canvas <dir> --out <dir> [--n N] [--bind 0.0.0.0]
 // Thread 구성: Main 1 + Handler N (접속 단계에서 한 번만 생성)
 // 공유 상태(round, arrived, edge, halo, frame, 측정값)는 Mutex m 하나로 보호하고,
 // done_cv(Handler → Main "다 왔다")와 go_cv(Main → Handler "다음 Round")로 Round Barrier를 만든다.
@@ -38,10 +38,10 @@ public class Assigner {
     }
 
     public static void main(String[] a) throws Exception {
-        String usage = "Assigner --port <port> --canvas <dir> --out <dir> [--n N] [--bind addr] [--team n (default " + Common.TEAM + ")]";
+        String usage = "Assigner --port <port> --team <n> --canvas <dir> --out <dir> [--n N] [--bind addr]";
         Map<String, String> arg = Common.args(a);
         int port = Integer.parseInt(Common.need(arg, "port", usage));
-        team = Integer.parseInt(arg.getOrDefault("team", String.valueOf(Common.TEAM)));
+        team = Integer.parseInt(Common.need(arg, "team", usage));
         Path cdir = Paths.get(Common.need(arg, "canvas", usage));
         outDir = Paths.get(Common.need(arg, "out", usage));
         String bind = arg.getOrDefault("bind", "0.0.0.0");

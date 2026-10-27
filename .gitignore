@@ -16,3 +16,10 @@ run_workers/
 Thumbs.db
 .vscode/
 .idea/
+
+# 접속 정보 · 키 (공개 저장소에 올리지 않음)
+*.pem
+ec2참고.txt
+
+# 개인 참고 파일
+Readme과제3번째꺼.txt

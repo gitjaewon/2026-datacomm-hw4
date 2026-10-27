@@ -1,14 +1,14 @@
 // Single.java — 통신 없는 단일 프로그램 3,000 Round (개발용 자가 점검, 키트 Step 11)
-//   java -cp build Single --canvas <canvas 폴더> --out <출력 폴더>   (조번호 기본 4, 샘플 G11은 --team 11)
+//   java -cp build Single --team 4 --canvas <canvas 폴더> --out <출력 폴더>
 //   → <out>/round0000~3000.txt, <out>/RoundHash.txt
 import java.nio.file.*;
 import java.util.*;
 
 public class Single {
     public static void main(String[] a) throws Exception {
-        String usage = "Single --canvas <dir> --out <dir> [--team n (default " + Common.TEAM + ")]";
+        String usage = "Single --team <n> --canvas <dir> --out <dir>";
         Map<String, String> m = Common.args(a);
-        int team = Integer.parseInt(m.getOrDefault("team", String.valueOf(Common.TEAM)));
+        int team = Integer.parseInt(Common.need(m, "team", usage));
         Path cdir = Paths.get(Common.need(m, "canvas", usage)), out = Paths.get(Common.need(m, "out", usage));
         Files.createDirectories(out);
         char[][] g = Common.readCanvas(cdir.resolve("canvas0.txt"));

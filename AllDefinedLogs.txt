@@ -1,0 +1,85 @@
+HW#4 AllDefinedLogs - 프로그램에서 정의한 모든 로그 메시지
+====================================================================
+
+공통 형식
+  [HH:MM:SS.mmm] NODE | EVENT | STATUS | message
+  시각        KST (Asia/Seoul) 실제 시각. 서버 시간대와 상관없이 KST로 찍는다
+  NODE        ASSIGNER, WORKERk (k = ASSIGN으로 받은 번호)
+  STATUS      SUCCESS, FAIL, INFO, WARN
+  로그 파일   Assigner.txt (--out 폴더), Worker{k}.txt (--logdir 폴더). 같은 내용을 콘솔에도 출력한다
+  ROUND · RESULT · BARRIER는 매 Round 찍으면 너무 많아서 100 Round마다 요약한다.
+
+로그로 따라가는 순서
+  INIT → SAVE(round0000) → CONNECT × N → ASSIGN × N → ROUND/RESULT/BARRIER/SAVE (100 Round마다)
+  → REPAINT (r=1000, 2000) → ... → SAVE(round3000) → TERMINATE
+
+
+1. ASSIGNER (Assigner.txt)
+--------------------------------------------------------------------
+EVENT      STATUS    message                                               남기는 때
+INIT       SUCCESS   N=<N> (random 4~8 | --n) bands=[y0,...,80] team=<t>    canvas 3장 검사, N 결정, 포트 bind 후
+                     listen <addr>:<port> canvas=<dir> out=<dir>
+INIT       FAIL      <canvas 파일>: <바이트 수 / 줄 끝 / 문자 오류>          canvas 형식이 틀리면 종료
+INIT       FAIL      --n must be 1..8                                      --n 값이 범위 밖이면 종료
+SAVE       SUCCESS   roundXXXX.txt 12880B hash=<hash8>                     round 파일 저장 직후 (100 Round마다, 31번)
+CONNECT    SUCCESS   worker k=<k> from <ip>:<port> (<k+1>/<N>) HELLO        accept 후 HELLO 확인 (접속 순서 = k)
+CONNECT    FAIL      worker k=<k>: <오류> / sent '<줄>' instead of HELLO    HELLO를 못 받으면 종료
+ASSIGN     SUCCESS   k=<k> rows <y0>..<y1-1> (h=<h>) sent <n> lines         Worker k에게 ASSIGN 전송 후
+                     (canvas0 <h> + canvas1 <h+2> + canvas2 <h+2>)
+ASSIGN     FAIL      worker k=<k>: <오류>                                  ASSIGN 전송 실패 시 종료
+ROUND      INFO      r=0 start, handlers=<N>                               Handler N개 시작 직후
+ROUND      INFO      r=<r> start                                           100 Round마다 다음 구간 시작
+RESULT     INFO      r=<a>..<b> all <N> results x100 received,             100 Round마다. 이 구간의 Round당 평균 전송량
+                     traffic normal=<B>B full=<B>B per round               (normal = 보통 Round, full = 10 Round마다)
+RESULT     FAIL      worker k=<k> sent '<줄>', expected 'RESULT r k'        RESULT의 r 또는 k가 다르면 종료
+RESULT     FAIL      worker k=<k> connection error: <예외> <내용>           Worker 연결이 끊기면 종료
+BARRIER    INFO      r=<a>..<b> avg_round=<ms> max_round=<ms>               100 Round마다 Round 시간과 Barrier 대기시간
+                     avg_wait=<ms> max_wait=<ms> slowest=W<k>(<n>/100,h=<h>) slowest = 가장 늦게 도착한 횟수가 많은 Worker
+REPAINT    INFO      r=1000 canvas1 repaint + brian (applied by workers)   RESULT 999를 모두 받고 round1000 저장 뒤
+REPAINT    INFO      r=2000 canvas2 repaint + cyclic levels team=<t>       RESULT 1999를 모두 받고 round2000 저장 뒤
+                     (applied by workers on ROUND 2000)
+TERMINATE  INFO      round time avg max | barrier wait avg max |           3,000 Round 후 전체 지표 요약
+                     slowest=W<k> (<n>/3000, h=<h>)
+TERMINATE  INFO      slowest count per worker: W0(h=..)=n W1(h=..)=n ...   Worker별 가장 늦은 횟수
+TERMINATE  INFO      traffic normal round avg=<B>B, every 10 rounds         전송량 요약
+                     avg=<B>B, total=<KB>KB
+TERMINATE  INFO      files: round x31, frames x301 in <dir>                저장 파일 요약
+TERMINATE  SUCCESS   3000 rounds <s>s (<x> round/s). BYE sent to <N>.        모든 Handler join 후 마지막 줄
+                     joined.
+
+
+2. WORKER (Worker{k}.txt)
+--------------------------------------------------------------------
+ASSIGN 전에는 k를 모르므로 로그를 메모리에 두었다가, ASSIGN을 받은 뒤 Worker{k}.txt 앞부분에 쓴다.
+
+EVENT      STATUS    message                                               남기는 때
+CONNECT    SUCCESS   connected to <host>:<port> local port <p>             Assigner 접속 직후
+CONNECT    INFO      HELLO sent, waiting for ASSIGN                        HELLO 전송 후
+CONNECT    FAIL      <예외>: <내용>                                        접속 실패, ASSIGN 형식 오류, 그림 줄 길이 오류
+ASSIGN     SUCCESS   k=<k> N=<N> rows <y0>..<y1-1> h=<h> team=<t>          ASSIGN과 그림 줄을 모두 받은 뒤
+                     (received <n> lines = <h> + <h+2> + <h+2>)
+ROUND      INFO      r=<a>..<b> avg_compute=<ms> max=<ms> (calc only <ms>)  100 Round마다. compute = ROUND 수신 ~ RESULT 송신,
+                                                                           calc only = 규칙 계산만 걸린 시간
+ROUND      FAIL      <예외>: <내용>                                        수신 Thread 오류 (모르는 명령, 줄 길이, 연결 끊김)
+RESULT     INFO      r=<a>..<b> sent <B> B                                 100 Round마다 보낸 바이트
+RESULT     FAIL      <예외>: <내용>                                        계산 Thread 오류 (ROUND 번호 순서 어긋남, 송신 실패)
+REPAINT    INFO      r=1000 repaint canvas1 rows <y0-1>..<y1> (h+2=<n>)     ROUND 1000을 받고 작업판 전체에 덧칠 + '@' 변환 후
+                     -> brian '@'
+REPAINT    INFO      r=2000 repaint canvas2 rows <y0-1>..<y1>               ROUND 2000을 받고 덧칠 + 밝기 단계 변환 후
+                     -> cyclic levels (ytop=<y> team=<t>)
+TERMINATE  SUCCESS   BYE. rounds=3000 avg_compute=<ms> (h=<h>)             BYE를 받고 처리 Round 수가 3,000일 때
+TERMINATE  WARN      BYE. rounds=<n> ...                                   BYE를 받았는데 처리 Round 수가 3,000이 아닐 때
+
+
+3. 예 (로컬, 샘플 G11, N = 6)
+--------------------------------------------------------------------
+[16:31:45.126] ASSIGNER | INIT      | SUCCESS | N=6 (--n) bands=[0,13,26,40,53,66,80] team=11 listen 0.0.0.0:9000 ...
+[16:31:45.170] ASSIGNER | SAVE      | SUCCESS | round0000.txt 12880B hash=74aebc0f
+[16:31:46.348] ASSIGNER | CONNECT   | SUCCESS | worker k=1 from 127.0.0.1:62310 (2/6) HELLO
+[16:31:46.419] ASSIGNER | ASSIGN    | SUCCESS | k=1 rows 13..25 (h=13) sent 43 lines (canvas0 13 + canvas1 15 + canvas2 15)
+[16:31:49.241] ASSIGNER | BARRIER   | INFO    | r=2900..2999 avg_round=0.9ms max_round=4.7ms avg_wait=0.3ms max_wait=3.5ms slowest=W0(29/100,h=13)
+[16:31:49.243] ASSIGNER | TERMINATE | SUCCESS | 3000 rounds 2.8s (1081.5 round/s). BYE sent to 6. joined.
+
+[16:31:46.482] WORKER2 | ASSIGN    | SUCCESS | k=2 N=6 rows 26..39 h=14 team=11 (received 46 lines = 14 + 16 + 16)
+[16:31:47.609] WORKER2 | REPAINT   | INFO    | r=1000 repaint canvas1 rows 25..40 (h+2=16) -> brian '@'
+[16:31:49.231] WORKER2 | TERMINATE | SUCCESS | BYE. rounds=3000 avg_compute=0.3ms (h=14)

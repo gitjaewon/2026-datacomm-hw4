@@ -11,7 +11,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 public class Common {
-    static final int TEAM = 4;                   // 우리 조 번호 (샘플 G11로 시험할 때만 --team 11)
     static final int H = 80, W = 160, ROUNDS = 3000;
     static final int FILE_BYTES = (W + 1) * H;   // 12,880
 
