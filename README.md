@@ -9,7 +9,6 @@
 | `src/` | Assigner, Worker, JobQueue, myrules(규칙 함수), Common, Single(통신 없는 기준 실행) |
 | `canvas/` | 우리 조 canvas0~2.txt |
 | `scripts/` | 빌드, Worker N개 실행, 로컬 검증 |
-| `tools/make_canvas.py` | canvas 생성 스크립트 (pyfiglet, 제출 안 함) |
 
 `student_pack/`(배포 자료)과 `참고자료/`는 저장소에 없다. 각자 `HW4_student_pack.zip`을 `student_pack/`에 풀어서 쓴다.
 
@@ -56,4 +55,4 @@ java -cp build/classes Assigner --port 9000 --team 4 --canvas canvas --out run_t
 - [ ] 제출용 실행 3회 → hash_result.txt, round 파일, 로그, GIF
 - [ ] Readme 7·8절 지표 실측표와 정합성 결과
 - [ ] 시연 영상 → download.txt
-- [ ] G4HW4.zip 압축 (student_pack, build, tools 제외)
+- [ ] G4HW4.zip 압축 (student_pack, build 제외)
