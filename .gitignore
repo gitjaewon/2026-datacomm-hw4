@@ -1,0 +1,18 @@
+# 빌드 결과·테스트 출력
+build/
+*.class
+
+# 배포 자료 (공개 저장소에 올리지 않음)
+참고자료/
+student_pack/
+
+# 실행 결과 (제출 zip에만 넣음)
+run*/
+n1/
+run_workers/
+
+# OS · 편집기
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
