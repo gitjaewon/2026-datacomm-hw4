@@ -14,17 +14,18 @@ public class myrules {
     // Rule1 Text Life: B3/S23 + 글자 물려받기(부모 3개 중 최빈, 동률이면 ASCII 최소)
     static char rule1_cell(char[][] w, int i, int x) {
         int W = w[0].length, cnt = 0;
-        char[] par = new char[8];
+        char a = 0, b = 0, c = 0;                  // 산 이웃의 앞 3글자 (탄생일 때 부모)
         for (int dy = -1; dy <= 1; dy++)
             for (int dx = -1; dx <= 1; dx++) {
                 if (dy == 0 && dx == 0) continue;
-                char c = w[i + dy][(x + dx + W) % W];
-                if (c != ' ') par[cnt++] = c;
+                char n = w[i + dy][(x + dx + W) % W];
+                if (n == ' ') continue;
+                if (cnt == 0) a = n; else if (cnt == 1) b = n; else if (cnt == 2) c = n;
+                cnt++;
             }
         char me = w[i][x];
         if (me != ' ') return (cnt == 2 || cnt == 3) ? me : ' ';
         if (cnt != 3) return ' ';
-        char a = par[0], b = par[1], c = par[2];
         if (a == b || a == c) return a;           // 2개 이상 같은 글자가 최빈
         if (b == c) return b;
         return (char) Math.min(a, Math.min(b, c)); // 모두 다르면 ASCII 최소
@@ -48,6 +49,7 @@ public class myrules {
     static char rule3_cell(char[][] w, int i, int x) {
         int W = w[0].length;
         char me = w[i][x];
+        if (me >= 128 || LEVEL[me] < 0) return me;  // RAMP에 없는 글자 (to_cyclic 뒤에는 생기지 않음)
         char nxt = RAMP.charAt((LEVEL[me] + 1) % 10);
         if (w[i - 1][x] == nxt || w[i + 1][x] == nxt
                 || w[i][(x + W - 1) % W] == nxt || w[i][(x + 1) % W] == nxt) return nxt;

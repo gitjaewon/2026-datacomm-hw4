@@ -31,17 +31,17 @@ public class Assigner {
     static int[] y;                          // 띠 경계 y[0..N]
     static Path outDir;
 
-    static void fail(String event, String msg) {
+    // 여러 Handler가 동시에 실패해도 FAIL 로그 한 줄을 남기고 한 번만 종료한다 (로그는 줄마다 flush됨)
+    static synchronized void fail(String event, String msg) {
         log.log(event, "FAIL", msg);
-        log.close();
         System.exit(1);
     }
 
     public static void main(String[] a) throws Exception {
         String usage = "Assigner --port <port> --team <n> --canvas <dir> --out <dir> [--n N] [--bind addr]";
         Map<String, String> arg = Common.args(a);
-        int port = Integer.parseInt(Common.need(arg, "port", usage));
-        team = Integer.parseInt(Common.need(arg, "team", usage));
+        int port = Common.intArg("port", Common.need(arg, "port", usage), 1, 65535, usage);
+        team = Common.intArg("team", Common.need(arg, "team", usage), 0, 999, usage);
         Path cdir = Paths.get(Common.need(arg, "canvas", usage));
         outDir = Paths.get(Common.need(arg, "out", usage));
         String bind = arg.getOrDefault("bind", "0.0.0.0");
@@ -57,10 +57,8 @@ public class Assigner {
         }
 
         // ② N 결정 (--n 없으면 4~8 무작위) → 띠 경계
-        if (arg.containsKey("n")) {
-            N = Integer.parseInt(arg.get("n"));
-            if (N < 1 || N > 8) fail("INIT", "--n must be 1..8");
-        } else N = 4 + new Random().nextInt(5);
+        if (arg.containsKey("n")) N = Common.intArg("n", arg.get("n"), 1, 8, usage);
+        else N = 4 + new Random().nextInt(5);
         y = new int[N + 1];
         for (int k = 0; k <= N; k++) y[k] = Common.H * k / N;
 
@@ -125,9 +123,8 @@ public class Assigner {
             final OutputStream out = outs[k];
             hs[k] = new Thread(() -> handler(kk, in, out), "handler-" + k);
         }
-        mainLoop(hs);
+        mainLoop(hs);                                                    // Handler join까지 mainLoop가 한다
 
-        for (Thread t : hs) t.join();
         for (Socket s : socks) s.close();
         log.close();
     }

@@ -51,6 +51,8 @@ TERMINATE  SUCCESS   3000 rounds <s>s (<x> round/s). BYE sent to <N>.        모
 2. WORKER (Worker{k}.txt)
 --------------------------------------------------------------------
 ASSIGN 전에는 k를 모르므로 로그를 메모리에 두었다가, ASSIGN을 받은 뒤 Worker{k}.txt 앞부분에 쓴다.
+ASSIGN을 받기 전에 실패하면(접속 거부, ASSIGN 형식 오류 등) Worker_unassigned_<pid>.txt에 그때까지의 로그와 FAIL을 남긴다.
+받은 그림 줄은 길이 160과 ASCII 32~126을 확인하고, 아니면 FAIL로 종료한다(Assigner도 같음).
 
 EVENT      STATUS    message                                               남기는 때
 CONNECT    SUCCESS   connected to <host>:<port> local port <p>             Assigner 접속 직후

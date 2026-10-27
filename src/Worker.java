@@ -17,10 +17,18 @@ public class Worker {
 
     static final Common.Log log = new Common.Log("WORKER?", true);
     static int k, N, y0, y1, team, h;
+    static Path logdir;
 
-    static void fail(String event, Exception e) {
+    // 수신·계산 Thread가 동시에 실패해도 한 번만 종료한다. ASSIGN 전에 실패하면 k를 모르므로
+    // Worker_unassigned_<pid>.txt에 그때까지의 로그와 FAIL을 남긴다.
+    static synchronized void fail(String event, Exception e) {
+        if (!log.isOpen()) {
+            try {
+                Files.createDirectories(logdir);
+                log.open("WORKER?", logdir.resolve("Worker_unassigned_" + ProcessHandle.current().pid() + ".txt"));
+            } catch (IOException io) { /* 콘솔에는 남는다 */ }
+        }
         log.log(event, "FAIL", e.getClass().getSimpleName() + ": " + e.getMessage());
-        log.close();
         System.exit(1);
     }
 
@@ -28,8 +36,8 @@ public class Worker {
         String usage = "Worker --host <ip> --port <port> [--logdir <dir>]";
         Map<String, String> m = Common.args(a);
         String host = Common.need(m, "host", usage);
-        int port = Integer.parseInt(Common.need(m, "port", usage));
-        Path logdir = Paths.get(m.getOrDefault("logdir", "."));
+        int port = Common.intArg("port", Common.need(m, "port", usage), 1, 65535, usage);
+        logdir = Paths.get(m.getOrDefault("logdir", "."));
 
         Socket sock = null;
         Common.LineReader in = null;

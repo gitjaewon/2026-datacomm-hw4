@@ -92,11 +92,14 @@ public class Common {
             }
         }
 
-        // 그림 줄: 정확히 160글자인지 확인
+        // 그림 줄: 정확히 160글자이고 ASCII 32~126만 있는지 확인 (canvas와 같은 조건)
         char[] readRow() throws IOException {
             String s = readLine();
             if (s.length() != W) throw new IOException("picture line length " + s.length() + " (expected " + W + ")");
-            return s.toCharArray();
+            char[] row = s.toCharArray();
+            for (int x = 0; x < W; x++)
+                if (row[x] < 32 || row[x] > 126) throw new IOException("picture line col " + x + " is not ASCII 32~126 (" + (int) row[x] + ")");
+            return row;
         }
     }
 
@@ -128,8 +131,23 @@ public class Common {
 
     static String need(Map<String, String> m, String k, String usage) {
         String v = m.get(k);
-        if (v == null) { System.err.println("missing --" + k + "\nusage: " + usage); System.exit(2); }
+        if (v == null) usageExit("missing --" + k, usage);
         return v;
+    }
+
+    // 정수 인자: 값이 없거나 숫자가 아니거나 범위 밖이면 사용법을 출력하고 종료
+    static int intArg(String k, String v, int lo, int hi, String usage) {
+        try {
+            int n = Integer.parseInt(v);
+            if (n >= lo && n <= hi) return n;
+        } catch (NumberFormatException e) { /* 아래에서 사용법 출력 */ }
+        usageExit("--" + k + " must be an integer " + lo + ".." + hi + " (got '" + v + "')", usage);
+        return 0;
+    }
+
+    static void usageExit(String why, String usage) {
+        System.err.println(why + "\nusage: " + usage);
+        System.exit(2);
     }
 
     // ---------- 로그 ----------
@@ -156,6 +174,8 @@ public class Common {
             pending.clear();
             file.flush();
         }
+
+        synchronized boolean isOpen() { return file != null; }
 
         synchronized void log(String event, String status, String msg) {
             String time = LocalTime.now(ZONE).format(F);

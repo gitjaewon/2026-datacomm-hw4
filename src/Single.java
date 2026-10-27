@@ -8,7 +8,7 @@ public class Single {
     public static void main(String[] a) throws Exception {
         String usage = "Single --team <n> --canvas <dir> --out <dir>";
         Map<String, String> m = Common.args(a);
-        int team = Integer.parseInt(Common.need(m, "team", usage));
+        int team = Common.intArg("team", Common.need(m, "team", usage), 0, 999, usage);
         Path cdir = Paths.get(Common.need(m, "canvas", usage)), out = Paths.get(Common.need(m, "out", usage));
         Files.createDirectories(out);
         char[][] g = Common.readCanvas(cdir.resolve("canvas0.txt"));
